@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class SnakeBehaviour : MonoBehaviour
 {
+    [SerializeField] GameObject SnakeTailPrefab;
+    public List<Vector3> prevCoords;
+    public List<GameObject> snakeTails;
     
     public enum Move
     {
@@ -13,11 +16,13 @@ public class SnakeBehaviour : MonoBehaviour
         Right = 3
     }
 
-
     private void Start()
     {
+        prevCoords = new List<Vector3>();
+        snakeTails = new List<GameObject>();
         StartCoroutine(SnakeMovement());
     }
+
 
     private void Update()
     {
@@ -39,6 +44,11 @@ public class SnakeBehaviour : MonoBehaviour
         {
             RotateHead(Move.Right);
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            AddTail();
+        }
     }
 
     IEnumerator SnakeMovement()
@@ -48,6 +58,21 @@ public class SnakeBehaviour : MonoBehaviour
             yield return new WaitForSecondsRealtime(1);
 
             transform.Translate(1,0,0);
+
+            if (snakeTails.Count+1>prevCoords.Count)
+            {
+                prevCoords.Insert(0,transform.position);
+            }
+            else
+            {
+                prevCoords.Insert(0, transform.position);
+                prevCoords.RemoveAt(prevCoords.Count - 1);
+            }
+
+            for (int i = 0; i < snakeTails.Count; i++)
+            {
+                snakeTails[i].transform.position = prevCoords[i + 1];
+            }
         }
     }
 
@@ -81,4 +106,28 @@ public class SnakeBehaviour : MonoBehaviour
                 break;
         }
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.tag == "fruit")
+        {
+            AddTail();
+        }
+        if (collision.tag == "tail")
+        {
+            Destroy(transform.parent.gameObject);
+        }
+    } 
+
+    void AddTail()
+    {
+        GameObject tail = Instantiate(SnakeTailPrefab,transform.parent);
+        snakeTails.Add(tail);
+    }
+
+
+    // Добавить экран проигрыша
+    // Добавить звуки 
+    // Добавить ускорение змеи от количества съеденых фруктов (5)
+
 }
